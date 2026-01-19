@@ -1,0 +1,62 @@
+import tkinter as tk
+
+def grille_cliquable_sans_doublon(canvas, L, H, taille_case=40, ox=50, oy=100):
+    """
+    Quadrillage L x H :
+    - aucune arête dupliquée
+    - chaque arête est cliquable
+    - clic : plein <-> pointillé
+    """
+
+    def basculer(event):
+        arete = canvas.find_withtag("current")[0]
+        tags = canvas.gettags(arete)
+
+        if "pointille" in tags:
+            canvas.itemconfig(arete, dash=())
+            canvas.dtag(arete, "pointille")
+            canvas.addtag_withtag("plein", arete)
+        else:
+            canvas.itemconfig(arete, dash=(4, 4))
+            canvas.dtag(arete, "plein")
+            canvas.addtag_withtag("pointille", arete)
+
+    # --- Arêtes verticales ---
+    for i in range(L + 1):
+        for j in range(H):
+            x = i * taille_case + ox
+            y1 = j * taille_case + oy
+            y2 = y1 + taille_case
+
+            arete = canvas.create_line(
+                x, y1, x, y2,
+                width=2,
+                dash=(),
+                tags=("arete", "plein")
+            )
+            canvas.tag_bind(arete, "<Button-1>", basculer)
+
+    # --- Arêtes horizontales ---
+    for j in range(H + 1):
+        for i in range(L):
+            y = j * taille_case + oy
+            x1 = i * taille_case + ox
+            x2 = x1 + taille_case
+
+            arete = canvas.create_line(
+                x1, y, x2, y,
+                width=2,
+                dash=(),
+                tags=("arete", "plein")
+            )
+            canvas.tag_bind(arete, "<Button-1>", basculer)
+
+
+
+fenetre = tk.Tk()
+canvas = tk.Canvas(fenetre, width=500, height=400, bg="white")
+canvas.pack()
+
+grille_cliquable_sans_doublon(canvas, L=6, H=5, taille_case=50)
+
+fenetre.mainloop()
