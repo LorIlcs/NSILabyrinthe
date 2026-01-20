@@ -12,8 +12,15 @@ def grille_cliquable_sans_doublon(canvas, L, H, taille_case=40, ox=50, oy=100):
         arete = canvas.find_withtag("current")[0]
         tags = canvas.gettags(arete)
         
-        if "Bordure" in canvas.gettags(arete):
+        if "Bordure" in tags or "verrouille" in tags:
             return
+
+        if "selection" in tags:
+            canvas.dtag("selection", arete)
+            canvas.itemconfig(arete, dash=())
+        else:
+            canvas.addtag_withtag("selection", arete)
+            canvas.itemconfig(arete, dash = (4,4))
         
         if "pointille" in tags:
             canvas.itemconfig(arete, dash=())
@@ -64,6 +71,25 @@ def grille_cliquable_sans_doublon(canvas, L, H, taille_case=40, ox=50, oy=100):
             canvas.tag_bind(arete, "<Button-1>", basculer)
 
 
+
+    # --- Verrouillage des murs---
+
+    def valider_selection(canvas):
+        for arete in canvas.find_withtag("selection"):
+            canvas.dtag(arete, "selection")
+            canvas.addtag_withtag("verrouille", arete)
+            canvas.itemconfig(arete, fill="gray")
+
+
+   #---Bouton verrouillage des murs du labyrinth---
+            
+
+    bouton = tk.Button(fenetre, text = "Valider les murs du Labyrinth", command=lambda: valider_selection(canvas))
+    bouton.pack()
+
+    
+
+        
 
     
 
