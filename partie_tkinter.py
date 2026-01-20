@@ -11,7 +11,10 @@ def grille_cliquable_sans_doublon(canvas, L, H, taille_case=40, ox=50, oy=100):
     def basculer(event):
         arete = canvas.find_withtag("current")[0]
         tags = canvas.gettags(arete)
-
+        
+        if "Bordure" in canvas.gettags(arete):
+            return
+        
         if "pointille" in tags:
             canvas.itemconfig(arete, dash=())
             canvas.dtag(arete, "pointille")
@@ -28,13 +31,18 @@ def grille_cliquable_sans_doublon(canvas, L, H, taille_case=40, ox=50, oy=100):
             y1 = j * taille_case + oy
             y2 = y1 + taille_case
 
+            tags = ["arete", "plein"]
+            if i == 0 or i == L:
+                tags.append("Bordure")
+                
             arete = canvas.create_line(
                 x, y1, x, y2,
                 width=2,
                 dash=(),
-                tags=("arete", "plein")
+                tags= tuple(tags)
             )
             canvas.tag_bind(arete, "<Button-1>", basculer)
+           
 
     # --- Arêtes horizontales ---
     for j in range(H + 1):
@@ -43,13 +51,21 @@ def grille_cliquable_sans_doublon(canvas, L, H, taille_case=40, ox=50, oy=100):
             x1 = i * taille_case + ox
             x2 = x1 + taille_case
 
+            tags = ["arete", "plein"]
+            if j == 0 or j == H:
+                tags.append("Bordure")
+
             arete = canvas.create_line(
                 x1, y, x2, y,
                 width=2,
                 dash=(),
-                tags=("arete", "plein")
+                tags=tuple(tags)
             )
             canvas.tag_bind(arete, "<Button-1>", basculer)
+
+
+
+    
 
 
 
