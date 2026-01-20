@@ -72,16 +72,16 @@ class Labyrinthe():
                 cases.add(case_h)
             case_b = (x0, y0)
             if self.case_valide(x0, y0):
-                cases.add(case_b)
-                
+                cases.add(case_b)             
         else:
             # Le mur est vertical
+            case_g = (x0 - 1, y0)
+            if self.case_valide(x0 - 1, y0):
+                cases.add(case_g)
+            case_d = (x0, y0)
+            if self.case_valide(x0, y0):
+                cases.add(case_d)
             
-                
-
-        
-        
-       
         
     def passe_muraille(self, C0, L0, C1, L1):
         """
@@ -90,11 +90,7 @@ class Labyrinthe():
         """
 
         
-
         
-
-        
-
     def construit_graphe(self):
         # Construction des sommets du graphe
         laby = Graphe()
