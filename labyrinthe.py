@@ -92,28 +92,55 @@ class Labyrinthe():
         if not (self.case_valide(C0, L0) and self.case_valide(C1, L1)):
             raise IndexError("cases invalide")
 
+        murs_0 = self.murs_case(C0, L0)
+        murs_1 = self.murs_case(C1, L1)
 
-        murs_proche = self_murs_case(C0, L0) and self_murs_case(C1, L1) 
+        
+        murs_proches = murs_0 & murs_1
+        
+        
+        for mur in murs_proche:
+            if mur in self.murs:
+                return False 
 
-        if not murs_proche:
-            return False
+        return True
 
 
         
     def construit_graphe(self):
         # Construction des sommets du graphe
         laby = Graphe()
-        for x in range(long):
-            for y in range(larg):
+        
+        for x in range(self.long):
+            for y in range(self.larg):
                 laby.ajouter_sommet((x, y))
-
+                
         # Ajout des arcs
         pass
         
 if __name__ == "__main__":
-    import test_labyrinthe
+    import test_labyrinthe 
                 
-                
-
+#=================
+#   VERIFICATION
+#=================
             
-    
+laby = Labyrinthe(long=8, larg=4)
+
+# mur_valide
+#assert laby.mur_valide(0, 0, 1, 0)      # horizontal
+#assert laby.mur_valide(0, 0, 0, 1)      # verticall
+#assert laby.mur_valide(7, 3, 8, 3)
+#assert laby.mur_valide(7, 3, 7, 4)
+#assert not laby.mur_valide(0, 0, 2, 0)  # trp long
+#assert not laby.mur_valide(0, 0, 0, 2)
+#assert not laby.mur_valide(-1, 0, 0, 0)
+#assert not laby.mur_valide(0, -1, 0, 0)
+#assert not laby.mur_valide(8, 0, 9, 0)
+#assert not laby.mur_valide(0, 4, 0, 5)
+
+# Pour case_valide
+assert laby.case_valide(0, 0)
+assert laby.case_valide(7, 3)
+assert not laby.case_valide(8, 0)
+assert not laby.case_valide(0, 4)
