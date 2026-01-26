@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import PhotoImage
 from time import sleep
 from PIL import Image, ImageTk
+import random 
 
 # ================== LABYRINTHE ==================
 
@@ -80,6 +81,39 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
         command=lambda: valider_selection(bouton)
     )
     bouton.pack(pady=10)
+
+    
+    def case_depart_arrive_alea(canvas, L, H, taille_case=40, ox=50, oy=100):
+        
+        i_dep = random.randint(0, L-1)
+        j_dep = random.randint(0, H-1)
+
+        x1_dep = ox + i_dep * taille_case
+        y1_dep = oy + j_dep * taille_case
+        x2_dep = ox + (i_dep + 1) * taille_case
+        y2_dep = oy + (j_dep +1) * taille_case
+
+        rect_dep = canvas.create_rectangle(x1_dep,y1_dep,x2_dep,y2_dep, fill ="green")
+
+        i_ar, j_ar = i_dep, j_dep
+        while i_ar == i_dep and j_ar == j_dep:
+            i_ar = random.randint(0, L-1)
+            j_ar = random.randint(0, H-1)
+       
+            x1_ar = ox + i_ar* taille_case
+            y1_ar= oy + j_ar * taille_case
+            x2_ar =  ox + (i_ar + 1)* taille_case
+            y2_ar =  oy + (j_ar +1) * taille_case
+
+        rect_ar = canvas.create_rectangle(x1_ar,y1_ar,x2_ar,y2_ar, fill ="red")
+        canvas.tag_lower(rect_dep)
+        canvas.tag_lower(rect_ar)
+
+    btn_cadre = tk.Frame(fenetre)
+    btn_cadre.pack(pady=10)
+    
+    tk.Button(btn_cadre, text="Placer Départ/Arrivée", command = lambda:case_depart_arrive_alea(canvas, L=6, H=5, taille_case=50)).pack(side="left", padx=5)
+
 
 # ================== RESTART ==================
 
