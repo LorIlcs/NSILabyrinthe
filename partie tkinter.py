@@ -13,11 +13,14 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
     - possibilité de verrouiller certaines arêtes
     """
 
+    verrou_actif = False
+    
     def basculer(event):
+        
         arete = canvas.find_withtag("current")[0]
         tags = canvas.gettags(arete)
-
-        if "Bordure" in tags or "verrouille" in tags:
+        
+        if "Bordure" in tags or verrou_actif == True:
             return
 
         if "selection" in tags:
@@ -67,11 +70,15 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
     
     # --- Verrouillage ---
     def valider_selection(bouton):
+        nonlocal verrou_actif
+        verrou_actif = True
+        
         for arete in canvas.find_withtag("selection"):
             canvas.dtag(arete, "selection")
             canvas.addtag_withtag("verrouille", arete)
             canvas.itemconfig(arete, fill="gray")
         bouton.config(state="disabled")
+
 
     bouton = tk.Button(
         fenetre,
