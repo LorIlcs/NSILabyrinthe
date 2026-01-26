@@ -125,9 +125,8 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
 
 # ================== RESTART ==================
 
-def restart():
-    #TODO
-    pass
+def reset():
+    print("reset")
 
 # ================== ECRAN DE SELECTION ==================
 
@@ -164,8 +163,11 @@ def lancer_labyrinthe():
     canvas = tk.Canvas(frame_canvas, width=canvas_width, height=canvas_height, bg="white")
     canvas.pack(fill="both", expand=True)
 
+    bouton_reset = tk.Button(frame_parent, image=restart_image_tk, width=restart_image_width, height=restart_image_height, relief="solid",
+                         command=reset)
+    #bouton_reset.place(relx=0.04, rely=0.01, anchor="ne")
+    
     ox, oy = 50, 50
-
     
     grille_cliquable_sans_doublon(canvas, root, L, H, taille_case=taille_case, ox=ox, oy=oy)
 
@@ -185,8 +187,8 @@ restart_image_tk = ImageTk.PhotoImage(restart_image_resize)
 
 
 bouton_reset = tk.Button(root, image=restart_image_tk, width=restart_image_width, height=restart_image_height, relief="solid",
-                         command=restart)
-bouton_reset.place(relx=0.99, rely=0.99, anchor="se")
+                         command=reset)
+#bouton_reset.place(relx=0.04, rely=0.01, anchor="ne")
 
 label_titre = tk.Label(root, text="Générer une grille", font=("", 60, "underline", "bold"))
 label_sous_titre = tk.Label(root, text="(Maximum: 15x15)", fg="blue", font=("", 30, "bold"))
