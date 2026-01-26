@@ -83,7 +83,7 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
     bouton.pack(pady=10)
 
     
-    def case_depart_arrive_alea(canvas, L, H, taille_case=40, ox=50, oy=100):
+    def case_depart_arrive_alea(canvas, L, H, taille_case=40, ox=50, oy=50):
         
         i_dep = random.randint(0, L-1)
         j_dep = random.randint(0, H-1)
@@ -112,7 +112,8 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
     btn_cadre = tk.Frame(fenetre)
     btn_cadre.pack(pady=10)
     
-    tk.Button(btn_cadre, text="Placer Départ/Arrivée", command = lambda:case_depart_arrive_alea(canvas, L=6, H=5, taille_case=50)).pack(side="left", padx=5)
+    tk.Button(btn_cadre, text="Placer Départ/Arrivée", font=("", 20), relief="solid",
+              command = lambda:case_depart_arrive_alea(canvas, L=L, H=H, taille_case=taille_case, ox=ox, oy=oy)).pack(side="left", padx=5)
 
 
 # ================== RESTART ==================
