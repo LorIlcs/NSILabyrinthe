@@ -99,7 +99,7 @@ class Labyrinthe():
         murs_proches = murs_0 & murs_1
         
         
-        for mur in murs_proche:
+        for mur in murs_proches:
             if mur in self.murs:
                 return False 
 
@@ -115,8 +115,20 @@ class Labyrinthe():
             for y in range(self.larg):
                 laby.ajouter_sommet((x, y))
                 
-        # Ajout des arcs
-        pass
+        #arcs
+        for x in range(self.long):
+            for y in range(self.larg):
+
+                if x + 1 < self.long:
+                    if self.passe_muraille(x, y, x + 1, y):
+                        laby.ajouter_arc((x, y), (x + 1, y)
+
+                              
+                    
+
+    
+                
+        
         
 if __name__ == "__main__":
     import test_labyrinthe 
@@ -128,7 +140,7 @@ if __name__ == "__main__":
 laby = Labyrinthe(long=8, larg=4)
 
 # mur_valide
-#assert laby.mur_valide(0, 0, 1, 0)      # horizontal
+#assert laby.mur_valide(0, 0, 1, 0)      # horrizontal
 #assert laby.mur_valide(0, 0, 0, 1)      # verticall
 #assert laby.mur_valide(7, 3, 8, 3)
 #assert laby.mur_valide(7, 3, 7, 4)
@@ -144,3 +156,5 @@ assert laby.case_valide(0, 0)
 assert laby.case_valide(7, 3)
 assert not laby.case_valide(8, 0)
 assert not laby.case_valide(0, 4)
+# assert,
+asser
