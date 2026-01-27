@@ -12,7 +12,7 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
     - lignes pleines ou pointillées
     - possibilité de verrouiller certaines arêtes
     """
-
+    fenetre.rowconfigure(1, weight=1)
     verrou_actif = False
     
     def basculer(event):
@@ -87,11 +87,11 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
         relief="solid",
         command=lambda: valider_selection(bouton)
     )
-    bouton.pack(pady=10)
+    bouton.place(anchor="center", rely=0.95, relx=0.35, relwidth = 0.25)
 
     
     def case_depart_arrive_alea(canvas, L, H, taille_case=40, ox=50, oy=50):
-        
+        bouton_depart_arrivee.config(state="disabled")
         i_dep = random.randint(0, L-1)
         j_dep = random.randint(0, H-1)
 
@@ -119,14 +119,19 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
     btn_cadre = tk.Frame(fenetre)
     btn_cadre.pack(pady=10)
     
-    tk.Button(btn_cadre, text="Placer Départ/Arrivée", font=("", 20), relief="solid",
-              command = lambda:case_depart_arrive_alea(canvas, L=L, H=H, taille_case=taille_case, ox=ox, oy=oy)).pack(side="left", padx=5)
+    bouton_depart_arrivee = tk.Button(fenetre, text="Placer Départ/Arrivée",
+              font=("", 20), relief="solid",
+              command = lambda:case_depart_arrive_alea(canvas, L=L, H=H, taille_case=taille_case, ox=ox, oy=oy)
+              )
+    bouton_depart_arrivee.place(anchor="center", rely=0.95, relx=0.65, relwidth = 0.25)
 
 
 # ================== RESTART ==================
 
 def reset():
-    print("reset")
+    """
+    Plus dur que ca en a l'air, sera peux etre ajouté plus tard
+    """
 
 # ================== ECRAN DE SELECTION ==================
 
