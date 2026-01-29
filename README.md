@@ -10,5 +10,3 @@
 ## A ajouter
 
 - Integration de labyrinthe.py pour trouver le chemin le plus court
-- Choisir manuellement départ/arrivée
-- Résoudre manuellement le Labyrinthe
