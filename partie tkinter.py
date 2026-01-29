@@ -12,7 +12,7 @@ import random
 lignes = None
 colonnes = None
 auto_dep_arr = False
-
+auto_res_laby = False
 
 # ================== LABYRINTHE ==================
 
@@ -80,7 +80,7 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
     def valider_selection(bouton):
         nonlocal verrou_actif
         verrou_actif = True
-
+        
         for arete in canvas.find_withtag("selection"):
             canvas.dtag(arete, "selection")
             canvas.addtag_withtag("verrouille", arete)
@@ -123,57 +123,63 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
         canvas.tag_lower(rect_ar)
 
 
-        def case_depart_arrive_manuel(canvas, L, H, taille_case=50, ox=50, oy=50):
+    def case_depart_arrive_manuel(canvas, L, H, taille_case=50, ox=50, oy=50):
         """
-        le joueur clique sur une case pour choisir le départ et l'arrivée.
-        Les clics sur les murs sont désactivés pendant ce mode.
+        Le joueur clique sur une case pour choisir le départ et l'arrivée.
         """
-        
-    
-        points = {"depart": None,"arrivee": None}
-
-        boutton_auto.config(state="disabled")
+        points = {"depart": None, "arrivee": None}
         canvas.config(cursor="cross")
 
-
         def clique_case(event):
-
             if event.x < ox or event.y < oy:
                 return
 
-        
             i = (event.x - ox) // taille_case
             j = (event.y - oy) // taille_case
 
-           
             if i < 0 or i >= L or j < 0 or j >= H:
                 return
 
             x1, y1 = ox + i * taille_case, oy + j * taille_case
             x2, y2 = x1 + taille_case, y1 + taille_case
 
-            
+            # --- Départ ---
             if points["depart"] is None:
                 points["depart"] = (i, j)
-                rect_ar_man = canvas.create_rectangle(x1, y1, x2, y2, fill="green", tags="entree")
-                
-                
-                
+                rect_dep = canvas.create_rectangle(
+                    x1, y1, x2, y2,
+                    fill="green",
+                    tags="entree"
+                )
+                canvas.tag_lower(rect_dep)
 
-            
+            # --- Arrivée ---
             elif points["arrivee"] is None:
                 if (i, j) == points["depart"]:
-                    return 
+                    return
+
                 points["arrivee"] = (i, j)
-                canvas.create_rectangle(x1, y1, x2, y2, fill="red", tags="sortie")
-                
+                rect_ar = canvas.create_rectangle(
+                    x1, y1, x2, y2,
+                    fill="red",
+                    tags="sortie"
+                )
+                canvas.tag_lower(rect_ar)
+
                 canvas.unbind("<Button-1>")
                 canvas.config(cursor="")
-                boutton_manuel.config(state="disabled")
-       
-        canvas.bind("<Button-1>", clique_case)            
+                bouton_depart_arrivee.config(state="disabled")   
+        canvas.bind("<Button-1>", clique_case)
 
-    
+
+    boutton_manuel = tk.Button(
+        fenetre,
+        text="Placer Départ/Arrivée manuellement",
+        font=("", 20),
+        relief="solid",
+        command = lambda: case_depart_arrive_manuel(canvas, L, H, taille_case, ox, oy)
+    )
+    boutton_manuel.place(rely=1, relx=1, relwidth=0.25)
     
     bouton_depart_arrivee = tk.Button(
         fenetre,
@@ -184,7 +190,7 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
     )
     bouton_depart_arrivee.place(rely=1, relx=1, relwidth=0.25)
 
-    return bouton_depart_arrivee
+    return bouton_depart_arrivee, case_depart_arrive_manuel
 
 
 # ================== RESET ==================
@@ -198,10 +204,20 @@ def reset():
 # ================== PARAMÈTRES ==================
 
 def param_boutons_resol(bouton, autre_bouton):
+    global auto_res_laby
+
     bouton.config(state="disabled")
     autre_bouton.config(state="disabled")
     bouton.config(fg="black", bg="light green")
     autre_bouton.config(fg="black", bg="red")
+
+    if bouton.cget("text") == "Oui" and bouton.cget("bg") == "light green":
+        auto_res_laby = True
+    else:
+        auto_res_laby = False
+
+    print("auto_res_laby ", bouton.cget("text"))
+    print("auto_res_laby ", auto_res_laby)
 
 
 def param_boutons_dep_arr(bouton, autre_bouton):
@@ -214,44 +230,14 @@ def param_boutons_dep_arr(bouton, autre_bouton):
 
     if bouton.cget("text") == "Aléatoirement" and bouton.cget("bg") == "light green":
         auto_dep_arr = True
+    else:
+        auto_dep_arr = False
 
-    print(bouton.cget("text"))
-    print(auto_dep_arr)
+    print("auto_dep_arr ", bouton.cget("text"))
+    print("auto_dep_arr", auto_dep_arr)
 
 
 # ================== PAGES ==================
-
-def page_resol():
-    for widget in root.winfo_children():
-        widget.destroy()
-
-    frame_parent = tk.Frame(root)
-    frame_parent.pack(fill="both", expand=True)
-
-    label_titre = tk.Label(frame_parent, text="Paramètres de création 2", font=("", 60, "bold"))
-    label_depart_arrivée = tk.Label(frame_parent, text="\nLe labyrinthe sera résolu:", font=("", 30, "underline"))
-
-    bouton_resol_manuel = tk.Button(
-        frame_parent,
-        text="Manuellement",
-        font=("", 20),
-        relief="solid",
-        command=lambda: param_boutons_dep_arr(bouton_manuel, bouton_aleatoire)
-    )
-
-    bouton_resol_auto = tk.Button(
-        frame_parent,
-        text="Automatiquement",
-        font=("", 20),
-        relief="solid",
-        command=lambda: param_boutons_dep_arr(bouton_manuel, bouton_aleatoire)
-    )
-
-    label_titre.pack()
-    label_depart_arrivée.pack()
-    bouton_resol_auto.place(anchor="center", rely=0.25, relx=0.35, relwidth=0.25)
-    bouton_resol_manuel.place(anchor="center", rely=0.25, relx=0.65, relwidth=0.25)
-
 
 def page_parametres():
     global lignes, colonnes
@@ -274,6 +260,8 @@ def page_parametres():
     label_titre = tk.Label(frame_parent, text="Paramètres de création", font=("", 60, "bold"))
     label_depart_arrivée = tk.Label(frame_parent, text="\nMon départ/arrivée sera sélectionné:", font=("", 30, "underline"))
 
+    label_res_auto = tk.Label(frame_parent, text="\n\n\nRésoudre automatiquement le labyrinthe?:", font=("", 28, "underline"))
+
     bouton_aleatoire = tk.Button(
         frame_parent,
         text="Aléatoirement",
@@ -290,6 +278,22 @@ def page_parametres():
         command=lambda: param_boutons_dep_arr(bouton_manuel, bouton_aleatoire)
     )
 
+    bouton_pas_res = tk.Button(
+        frame_parent,
+        text="Non",
+        font=("", 20),
+        relief="solid",
+        command=lambda: param_boutons_resol(bouton_pas_res, bouton_auto_res)
+    )
+
+    bouton_auto_res = tk.Button(
+        frame_parent,
+        text="Oui",
+        font=("", 20),
+        relief="solid",
+        command=lambda: param_boutons_resol(bouton_auto_res, bouton_pas_res)
+    )
+
     bouton_confirmer = tk.Button(
         frame_parent,
         text="Valider",
@@ -300,8 +304,11 @@ def page_parametres():
 
     label_titre.pack()
     label_depart_arrivée.pack()
-    bouton_aleatoire.place(anchor="center", rely=0.25, relx=0.35, relwidth=0.25)
-    bouton_manuel.place(anchor="center", rely=0.25, relx=0.65, relwidth=0.25)
+    label_res_auto.pack()
+    bouton_aleatoire.place(anchor="center", rely=0.23, relx=0.35, relwidth=0.25)
+    bouton_manuel.place(anchor="center", rely=0.23, relx=0.65, relwidth=0.25)
+    bouton_auto_res.place(anchor="center", rely=0.40, relx=0.35, relwidth=0.25)
+    bouton_pas_res.place(anchor="center", rely=0.40, relx=0.65, relwidth=0.25)
     bouton_confirmer.place(anchor="center", rely=0.95, relx=0.5, relwidth=0.25)
 
 
@@ -334,10 +341,22 @@ def lancer_labyrinthe():
 
     ox, oy = 50, 50
 
-    bouton_dep_arr = grille_cliquable_sans_doublon(canvas, root, L, H, taille_case, ox, oy)
+    label_manuel = tk.Label(
+        frame_parent,
+        text="Si le placement du départ/arrivée est manuel,\nCliquez d'abord sur la grille pour les choisir!",
+        font=("", 30, "bold"),
+        fg="red"
+        )
 
-    if auto_dep_arr == True:
+    label_manuel.place(anchor="center", rely=0.2, relx=0.5)
+
+    bouton_dep_arr, activer_mode_manuel = grille_cliquable_sans_doublon(
+    canvas, root, L, H, taille_case, ox, oy)
+    
+    if auto_dep_arr:
         bouton_dep_arr.invoke()
+    else:
+        activer_mode_manuel(canvas, L, H, taille_case, ox, oy)
 
 
 # ================== PROGRAMME PRINCIPAL ==================
