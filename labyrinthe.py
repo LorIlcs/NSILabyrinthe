@@ -90,7 +90,7 @@ class Labyrinthe():
         """
 
         if not (self.case_valide(C0, L0) and self.case_valide(C1, L1)):
-            raise IndexError("cases invalide")
+            raise IndexError("cases invalide") # cas de base à l'ecterieur du laby
 
         murs_0 = self.murs_case(C0, L0)
         murs_1 = self.murs_case(C1, L1)
@@ -108,20 +108,28 @@ class Labyrinthe():
 
         
     def construit_graphe(self):
-        # Construction des sommets du graphe
+        # Construit des sommets pour le graphe
         laby = Graphe()
         
-        for x in range(self.long):
+        for x in range(self.long): # on parcour toute les cases qui deviennent des sommet
             for y in range(self.larg):
                 laby.ajouter_sommet((x, y))
                 
-        #arcs
-        for x in range(self.long):
+        # pour les arcs de notre labyrinthe
+        # on parcour toute les cases encore pour voir qui sont les voisins et mettre les arcs
+        for x in range(self.long):   
             for y in range(self.larg):
 
-                if x + 1 < self.long:
-                    if self.passe_muraille(x, y, x + 1, y):
-                        laby.ajouter_arc((x, y), (x + 1, y)
+                if x + 1 < self.long: # case de droite 
+                    if self.passe_muraille(x, y, x + 1, y): # je verifie avec passe_muraille si il y pas de mur entre eux
+                        laby.ajouter_arc((x, y), (x + 1, y)):# si il y a pas de mur ajoute un arc au graphe
+
+                if y + 1 < self.larg: # case du bas
+                    if self.passe_muraille(x, y, x, y + 1): # meme chose
+                        laby.ajouter_arc((x, y), (x, y + 1)):
+
+        return laby
+                                         
 
                               
                     
@@ -156,5 +164,4 @@ assert laby.case_valide(0, 0)
 assert laby.case_valide(7, 3)
 assert not laby.case_valide(8, 0)
 assert not laby.case_valide(0, 4)
-# assert,
-asser
+# assert
