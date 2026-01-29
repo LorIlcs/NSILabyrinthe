@@ -1,11 +1,8 @@
 # ================== IMPORTS ==================
 
 import tkinter as tk
-from tkinter import PhotoImage
 from time import sleep
-from PIL import Image, ImageTk
 import random
-
 
 # ================== VARIABLES GLOBALES ==================
 
@@ -365,10 +362,6 @@ root = tk.Tk()
 root.title("Labyrinthe")
 root.resizable(False, False)
 root.state("zoomed")
-
-restart_image = Image.open("image/restart.png")
-restart_image_resize = restart_image.resize((50, 50))
-restart_image_tk = ImageTk.PhotoImage(restart_image_resize)
 
 label_titre = tk.Label(root, text="Générer une grille", font=("", 60, "underline", "bold"))
 label_sous_titre = tk.Label(root, text="(Maximum: 15x15)", fg="blue", font=("", 30, "bold"))
