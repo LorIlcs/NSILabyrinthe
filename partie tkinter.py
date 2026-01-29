@@ -1,8 +1,18 @@
+# ================== IMPORTS ==================
+
 import tkinter as tk
 from tkinter import PhotoImage
 from time import sleep
 from PIL import Image, ImageTk
-import random 
+import random
+
+
+# ================== VARIABLES GLOBALES ==================
+
+lignes = None
+colonnes = None
+auto_dep_arr = False
+
 
 # ================== LABYRINTHE ==================
 
@@ -14,12 +24,11 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
     """
     fenetre.rowconfigure(1, weight=1)
     verrou_actif = False
-    
+
     def basculer(event):
-        
         arete = canvas.find_withtag("current")[0]
         tags = canvas.gettags(arete)
-        
+
         if "Bordure" in tags or verrou_actif == True:
             return
 
@@ -67,18 +76,16 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
             arete = canvas.create_line(x1, y, x2, y, width=2, tags=tuple(tags))
             canvas.tag_bind(arete, "<Button-1>", basculer)
 
-    
     # --- Verrouillage ---
     def valider_selection(bouton):
         nonlocal verrou_actif
         verrou_actif = True
-        
+
         for arete in canvas.find_withtag("selection"):
             canvas.dtag(arete, "selection")
             canvas.addtag_withtag("verrouille", arete)
             canvas.itemconfig(arete, fill="gray")
         bouton.config(state="disabled")
-
 
     bouton = tk.Button(
         fenetre,
@@ -87,64 +94,221 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
         relief="solid",
         command=lambda: valider_selection(bouton)
     )
-    bouton.place(anchor="center", rely=0.95, relx=0.35, relwidth = 0.25)
+    bouton.place(anchor="center", rely=0.95, relx=0.5, relwidth=0.25)
 
-    
     def case_depart_arrive_alea(canvas, L, H, taille_case=40, ox=50, oy=50):
         bouton_depart_arrivee.config(state="disabled")
-        i_dep = random.randint(0, L-1)
-        j_dep = random.randint(0, H-1)
+        i_dep = random.randint(0, L - 1)
+        j_dep = random.randint(0, H - 1)
 
         x1_dep = ox + i_dep * taille_case
         y1_dep = oy + j_dep * taille_case
         x2_dep = ox + (i_dep + 1) * taille_case
-        y2_dep = oy + (j_dep +1) * taille_case
+        y2_dep = oy + (j_dep + 1) * taille_case
 
-        rect_dep = canvas.create_rectangle(x1_dep,y1_dep,x2_dep,y2_dep, fill ="green")
+        rect_dep = canvas.create_rectangle(x1_dep, y1_dep, x2_dep, y2_dep, fill="green")
 
         i_ar, j_ar = i_dep, j_dep
         while i_ar == i_dep and j_ar == j_dep:
-            i_ar = random.randint(0, L-1)
-            j_ar = random.randint(0, H-1)
-       
-            x1_ar = ox + i_ar* taille_case
-            y1_ar= oy + j_ar * taille_case
-            x2_ar =  ox + (i_ar + 1)* taille_case
-            y2_ar =  oy + (j_ar +1) * taille_case
+            i_ar = random.randint(0, L - 1)
+            j_ar = random.randint(0, H - 1)
 
-        rect_ar = canvas.create_rectangle(x1_ar,y1_ar,x2_ar,y2_ar, fill ="red")
+            x1_ar = ox + i_ar * taille_case
+            y1_ar = oy + j_ar * taille_case
+            x2_ar = ox + (i_ar + 1) * taille_case
+            y2_ar = oy + (j_ar + 1) * taille_case
+
+        rect_ar = canvas.create_rectangle(x1_ar, y1_ar, x2_ar, y2_ar, fill="red")
         canvas.tag_lower(rect_dep)
         canvas.tag_lower(rect_ar)
 
-    btn_cadre = tk.Frame(fenetre)
-    btn_cadre.pack(pady=10)
+
+        def case_depart_arrive_manuel(canvas, L, H, taille_case=50, ox=50, oy=50):
+        """
+        le joueur clique sur une case pour choisir le départ et l'arrivée.
+        Les clics sur les murs sont désactivés pendant ce mode.
+        """
+        
     
-    bouton_depart_arrivee = tk.Button(fenetre, text="Placer Départ/Arrivée",
-              font=("", 20), relief="solid",
-              command = lambda:case_depart_arrive_alea(canvas, L=L, H=H, taille_case=taille_case, ox=ox, oy=oy)
-              )
-    bouton_depart_arrivee.place(anchor="center", rely=0.95, relx=0.65, relwidth = 0.25)
+        points = {"depart": None,"arrivee": None}
+
+        boutton_auto.config(state="disabled")
+        canvas.config(cursor="cross")
 
 
-# ================== RESTART ==================
+        def clique_case(event):
+
+            if event.x < ox or event.y < oy:
+                return
+
+        
+            i = (event.x - ox) // taille_case
+            j = (event.y - oy) // taille_case
+
+           
+            if i < 0 or i >= L or j < 0 or j >= H:
+                return
+
+            x1, y1 = ox + i * taille_case, oy + j * taille_case
+            x2, y2 = x1 + taille_case, y1 + taille_case
+
+            
+            if points["depart"] is None:
+                points["depart"] = (i, j)
+                rect_ar_man = canvas.create_rectangle(x1, y1, x2, y2, fill="green", tags="entree")
+                
+                
+                
+
+            
+            elif points["arrivee"] is None:
+                if (i, j) == points["depart"]:
+                    return 
+                points["arrivee"] = (i, j)
+                canvas.create_rectangle(x1, y1, x2, y2, fill="red", tags="sortie")
+                
+                canvas.unbind("<Button-1>")
+                canvas.config(cursor="")
+                boutton_manuel.config(state="disabled")
+       
+        canvas.bind("<Button-1>", clique_case)            
+
+    
+    
+    bouton_depart_arrivee = tk.Button(
+        fenetre,
+        text="Placer Départ/Arrivée",
+        font=("", 20),
+        relief="solid",
+        command=lambda: case_depart_arrive_alea(canvas, L, H, taille_case, ox, oy)
+    )
+    bouton_depart_arrivee.place(rely=1, relx=1, relwidth=0.25)
+
+    return bouton_depart_arrivee
+
+
+# ================== RESET ==================
 
 def reset():
     """
-    Plus dur que ca en a l'air, sera peux etre ajouté plus tard
+    Plus dur que ca en a l'air, sera peut-être ajouté plus tard
     """
 
-# ================== ECRAN DE SELECTION ==================
 
-def lancer_labyrinthe():
+# ================== PARAMÈTRES ==================
+
+def param_boutons_resol(bouton, autre_bouton):
+    bouton.config(state="disabled")
+    autre_bouton.config(state="disabled")
+    bouton.config(fg="black", bg="light green")
+    autre_bouton.config(fg="black", bg="red")
+
+
+def param_boutons_dep_arr(bouton, autre_bouton):
+    global auto_dep_arr
+
+    bouton.config(state="disabled")
+    autre_bouton.config(state="disabled")
+    bouton.config(fg="black", bg="light green")
+    autre_bouton.config(fg="black", bg="red")
+
+    if bouton.cget("text") == "Aléatoirement" and bouton.cget("bg") == "light green":
+        auto_dep_arr = True
+
+    print(bouton.cget("text"))
+    print(auto_dep_arr)
+
+
+# ================== PAGES ==================
+
+def page_resol():
+    for widget in root.winfo_children():
+        widget.destroy()
+
+    frame_parent = tk.Frame(root)
+    frame_parent.pack(fill="both", expand=True)
+
+    label_titre = tk.Label(frame_parent, text="Paramètres de création 2", font=("", 60, "bold"))
+    label_depart_arrivée = tk.Label(frame_parent, text="\nLe labyrinthe sera résolu:", font=("", 30, "underline"))
+
+    bouton_resol_manuel = tk.Button(
+        frame_parent,
+        text="Manuellement",
+        font=("", 20),
+        relief="solid",
+        command=lambda: param_boutons_dep_arr(bouton_manuel, bouton_aleatoire)
+    )
+
+    bouton_resol_auto = tk.Button(
+        frame_parent,
+        text="Automatiquement",
+        font=("", 20),
+        relief="solid",
+        command=lambda: param_boutons_dep_arr(bouton_manuel, bouton_aleatoire)
+    )
+
+    label_titre.pack()
+    label_depart_arrivée.pack()
+    bouton_resol_auto.place(anchor="center", rely=0.25, relx=0.35, relwidth=0.25)
+    bouton_resol_manuel.place(anchor="center", rely=0.25, relx=0.65, relwidth=0.25)
+
+
+def page_parametres():
+    global lignes, colonnes
+
     lignes = entree_ligne.get()
     colonnes = entree_colonne.get()
 
     if not (lignes.isdigit() and int(lignes) <= 15 and colonnes.isdigit() and int(colonnes) <= 15):
         label_invalide = tk.Label(root, text="Entrée invalide!", fg="red", font=("", 15, "bold"))
         label_invalide.pack()
-        
         print("Entrée invalide")
         return
+
+    for widget in root.winfo_children():
+        widget.destroy()
+
+    frame_parent = tk.Frame(root)
+    frame_parent.pack(fill="both", expand=True)
+
+    label_titre = tk.Label(frame_parent, text="Paramètres de création", font=("", 60, "bold"))
+    label_depart_arrivée = tk.Label(frame_parent, text="\nMon départ/arrivée sera sélectionné:", font=("", 30, "underline"))
+
+    bouton_aleatoire = tk.Button(
+        frame_parent,
+        text="Aléatoirement",
+        font=("", 20),
+        relief="solid",
+        command=lambda: param_boutons_dep_arr(bouton_aleatoire, bouton_manuel)
+    )
+
+    bouton_manuel = tk.Button(
+        frame_parent,
+        text="Manuellement",
+        font=("", 20),
+        relief="solid",
+        command=lambda: param_boutons_dep_arr(bouton_manuel, bouton_aleatoire)
+    )
+
+    bouton_confirmer = tk.Button(
+        frame_parent,
+        text="Valider",
+        font=("", 20),
+        relief="solid",
+        command=lancer_labyrinthe
+    )
+
+    label_titre.pack()
+    label_depart_arrivée.pack()
+    bouton_aleatoire.place(anchor="center", rely=0.25, relx=0.35, relwidth=0.25)
+    bouton_manuel.place(anchor="center", rely=0.25, relx=0.65, relwidth=0.25)
+    bouton_confirmer.place(anchor="center", rely=0.95, relx=0.5, relwidth=0.25)
+
+
+# ================== LANCEMENT DU LABYRINTHE ==================
+
+def lancer_labyrinthe():
+    global lignes, colonnes, auto_dep_arr
 
     L, H = int(colonnes), int(lignes)
     taille_case = 50
@@ -160,7 +324,7 @@ def lancer_labyrinthe():
 
     label_titre_2 = tk.Label(frame_parent, text="Modifiez votre grille!", font=("", 60, "bold"))
     label_titre_2.pack()
-    
+
     frame_canvas = tk.Frame(frame_parent, width=canvas_width, height=canvas_height)
     frame_canvas.pack(expand=True)
     frame_canvas.pack_propagate(False)
@@ -168,54 +332,38 @@ def lancer_labyrinthe():
     canvas = tk.Canvas(frame_canvas, width=canvas_width, height=canvas_height, bg="white")
     canvas.pack(fill="both", expand=True)
 
-    bouton_reset = tk.Button(frame_parent, image=restart_image_tk, width=restart_image_width, height=restart_image_height, relief="solid",
-                         command=reset)
-    #bouton_reset.place(relx=0.04, rely=0.01, anchor="ne")
-    
     ox, oy = 50, 50
-    
-    grille_cliquable_sans_doublon(canvas, root, L, H, taille_case=taille_case, ox=ox, oy=oy)
+
+    bouton_dep_arr = grille_cliquable_sans_doublon(canvas, root, L, H, taille_case, ox, oy)
+
+    if auto_dep_arr == True:
+        bouton_dep_arr.invoke()
 
 
 # ================== PROGRAMME PRINCIPAL ==================
 
 root = tk.Tk()
 root.title("Labyrinthe")
-root.resizable(False, False) 
+root.resizable(False, False)
 root.state("zoomed")
 
 restart_image = Image.open("image/restart.png")
-restart_image_width = 50
-restart_image_height = 50
-restart_image_resize = restart_image.resize((restart_image_width, restart_image_height))
+restart_image_resize = restart_image.resize((50, 50))
 restart_image_tk = ImageTk.PhotoImage(restart_image_resize)
-
-
-bouton_reset = tk.Button(root, image=restart_image_tk, width=restart_image_width, height=restart_image_height, relief="solid",
-                         command=reset)
-#bouton_reset.place(relx=0.04, rely=0.01, anchor="ne")
 
 label_titre = tk.Label(root, text="Générer une grille", font=("", 60, "underline", "bold"))
 label_sous_titre = tk.Label(root, text="(Maximum: 15x15)", fg="blue", font=("", 30, "bold"))
-label_sous_titre_2 = tk.Label(root, text=" ", font=("", 10))
 
 label_lignes = tk.Label(root, text="Nombre de lignes", font=("", 25))
-entree_ligne = tk.Entry(root, borderwidth=3, relief="solid", highlightthickness=5, width=8, font=("", 50), justify="center")
+entree_ligne = tk.Entry(root, width=8, font=("", 50), justify="center")
 
 label_colonnes = tk.Label(root, text="Nombre de colonnes", font=("", 25))
-entree_colonne = tk.Entry(root, borderwidth=3, relief="solid", highlightthickness=5, width=8, font=("", 50), justify="center")
+entree_colonne = tk.Entry(root, width=8, font=("", 50), justify="center")
 
-bouton_confirmer = tk.Button(
-    root,   
-    text="Confirmer",
-    font=("", 20),
-    relief="solid",
-    command=lancer_labyrinthe
-)
+bouton_confirmer = tk.Button(root, text="Confirmer", font=("", 20), relief="solid", command=page_parametres)
 
 label_titre.pack(pady=20)
 label_sous_titre.pack()
-label_sous_titre_2.pack()
 label_lignes.pack()
 entree_ligne.pack()
 label_colonnes.pack()
