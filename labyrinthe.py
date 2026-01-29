@@ -122,11 +122,11 @@ class Labyrinthe():
 
                 if x + 1 < self.long: # case de droite 
                     if self.passe_muraille(x, y, x + 1, y): # je verifie avec passe_muraille si il y pas de mur entre eux
-                        laby.ajouter_arc((x, y), (x + 1, y)):# si il y a pas de mur ajoute un arc au graphe
+                        laby.ajouter_arc((x, y), (x + 1, y))# si il y a pas de mur ajoute un arc au graphe
 
                 if y + 1 < self.larg: # case du bas
                     if self.passe_muraille(x, y, x, y + 1): # meme chose
-                        laby.ajouter_arc((x, y), (x, y + 1)):
+                        laby.ajouter_arc((x, y), (x, y + 1))
 
         return laby
                                          
