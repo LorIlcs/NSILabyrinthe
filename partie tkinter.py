@@ -189,15 +189,6 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
 
     return bouton_depart_arrivee, case_depart_arrive_manuel
 
-
-# ================== RESET ==================
-
-def reset():
-    """
-    Plus dur que ca en a l'air, sera peut-être ajouté plus tard
-    """
-
-
 # ================== PARAMÈTRES ==================
 
 def param_boutons_resol(bouton, autre_bouton):
