@@ -3,7 +3,10 @@ Outils pour la fabrication du graphe
 d'un labyrinthe donné par ses murs
 """
 
-from graphe_dico import *
+try:
+    from .graphe_dico import *
+except ImportError:
+    from graphe_dico import *
 
 class Labyrinthe():
     def __init__(self, long=4, larg=4, murs=set()):
@@ -123,10 +126,12 @@ class Labyrinthe():
                 if x + 1 < self.long: # case de droite 
                     if self.passe_muraille(x, y, x + 1, y): # je verifie avec passe_muraille si il y pas de mur entre eux
                         laby.ajouter_arc((x, y), (x + 1, y))# si il y a pas de mur ajoute un arc au graphe
+                        laby.ajouter_arc((x + 1, y), (x, y))# arc inverse pour pouvoir revenir
 
                 if y + 1 < self.larg: # case du bas
                     if self.passe_muraille(x, y, x, y + 1): # meme chose
                         laby.ajouter_arc((x, y), (x, y + 1))
+                        laby.ajouter_arc((x, y + 1), (x, y))# arc inverse pour pouvoir revenir
 
         return laby
                                          

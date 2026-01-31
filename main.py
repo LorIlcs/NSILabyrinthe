@@ -3,6 +3,8 @@
 import tkinter as tk
 from time import sleep
 import random
+from scripts_graphe.labyrinthe import *
+from scripts_graphe.graphe_dico import *
 
 # ================== VARIABLES GLOBALES ==================
 
@@ -75,25 +77,58 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
 
     # --- Verrouillage ---
     def valider_selection(bouton):
-        nonlocal verrou_actif
-        verrou_actif = True
+        nonlocal verrou_actif, aretes_supprimees
         
-        for arete in canvas.find_withtag("selection"):
+        # Mettre en gris les arêtes qui ont le tag "verrouille" (déjà supprimées)
+        for arete in canvas.find_withtag("verrouille"):
+            canvas.itemconfig(arete, fill="gray")
+        
+        # Récupérer toutes les arêtes sélectionnées (nouvelles suppressions)
+        nouvelles_suppressions = set(canvas.find_withtag("selection"))
+        
+        # Ajouter les nouvelles suppressions à l'ensemble
+        for arete in nouvelles_suppressions:
             canvas.dtag(arete, "selection")
             canvas.addtag_withtag("verrouille", arete)
             canvas.itemconfig(arete, fill="gray")
-        bouton.config(state="disabled")
+            aretes_supprimees.add(arete)
+        
+        # Vérifier le chemin
+        chemin_valide = graphe_mur_selectionners(
+            canvas, ox, oy, taille_case, L, H,
+            points_selection.get("depart"),
+            points_selection.get("arrivee"),
+            bouton,
+            fenetre
+        )
+        
+        # Si le chemin est valide, verrouiller définitivement
+        # Sinon, déverrouiller pour permettre la modification
+        if chemin_valide:
+            verrou_actif = True
+        else:
+            # Réactiver les murs pour permettre la modification
+            # Mais garder le tag "verrouille" pour mémoriser quels murs sont supprimés
+            for arete in canvas.find_withtag("verrouille"):
+                canvas.itemconfig(arete, fill="black")
+            verrou_actif = False
 
     bouton = tk.Button(
         fenetre,
         text="Valider les murs du labyrinthe",
         font=("", 20),
         relief="solid",
-        command=lambda: valider_selection(bouton)
+        command=lambda: [valider_selection(bouton)]
     )
     bouton.place(anchor="center", rely=0.95, relx=0.5, relwidth=0.25)
+    
+    # Dictionnaire pour stocker les points de départ et arrivée
+    points_selection = {"depart": None, "arrivee": None, "bouton": bouton}
+    # Ensemble pour mémoriser les arêtes supprimées (verrouillées)
+    aretes_supprimees = set()
 
     def case_depart_arrive_alea(canvas, L, H, taille_case=40, ox=50, oy=50):
+        nonlocal points_selection
         bouton_depart_arrivee.config(state="disabled")
         i_dep = random.randint(0, L - 1)
         j_dep = random.randint(0, H - 1)
@@ -118,13 +153,17 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
         rect_ar = canvas.create_rectangle(x1_ar, y1_ar, x2_ar, y2_ar, fill="red")
         canvas.tag_lower(rect_dep)
         canvas.tag_lower(rect_ar)
+        
+        # Mettre à jour les points de sélection
+        points_selection["depart"] = (i_dep, j_dep)
+        points_selection["arrivee"] = (i_ar, j_ar)
 
 
     def case_depart_arrive_manuel(canvas, L, H, taille_case=50, ox=50, oy=50):
         """
         Le joueur clique sur une case pour choisir le départ et l'arrivée.
         """
-        points = {"depart": None, "arrivee": None}
+        nonlocal points_selection
         canvas.config(cursor="cross")
 
         def clique_case(event):
@@ -141,8 +180,8 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
             x2, y2 = x1 + taille_case, y1 + taille_case
 
             # --- Départ ---
-            if points["depart"] is None:
-                points["depart"] = (i, j)
+            if points_selection["depart"] is None:
+                points_selection["depart"] = (i, j)
                 rect_dep = canvas.create_rectangle(
                     x1, y1, x2, y2,
                     fill="green",
@@ -151,11 +190,11 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
                 canvas.tag_lower(rect_dep)
 
             # --- Arrivée ---
-            elif points["arrivee"] is None:
-                if (i, j) == points["depart"]:
+            elif points_selection["arrivee"] is None:
+                if (i, j) == points_selection["depart"]:
                     return
 
-                points["arrivee"] = (i, j)
+                points_selection["arrivee"] = (i, j)
                 rect_ar = canvas.create_rectangle(
                     x1, y1, x2, y2,
                     fill="red",
@@ -188,6 +227,128 @@ def grille_cliquable_sans_doublon(canvas, fenetre, L, H, taille_case=50, ox=50, 
     bouton_depart_arrivee.place(rely=1, relx=1, relwidth=0.25)
 
     return bouton_depart_arrivee, case_depart_arrive_manuel
+
+# ================== CONSTRUCTION DU GRAPHE ==================
+
+def recuperer_murs(canvas, ox, oy, taille_case, L, H):
+    """
+    Récupère les murs qui restent (pleins, pas supprimés)
+    Les arêtes verrouillées sont les arêtes supprimées
+    Il faut donc récupérer toutes les arêtes sauf les verrouillées
+    """
+    murs = set()
+
+    # Récupérer tous les arêtes (sauf les bordures)
+    for arete in canvas.find_withtag("arete"):
+        tags = canvas.gettags(arete)
+        
+        # Ignorer les bordures et les arêtes supprimées (verrouillées)
+        if "Bordure" in tags or "verrouille" in tags:
+            continue
+        
+        x1, y1, x2, y2 = canvas.coords(arete)
+
+        # Conversion précise des coordonnées
+        gx1 = int((x1 - ox) / taille_case + 0.5)
+        gy1 = int((y1 - oy) / taille_case + 0.5)
+        gx2 = int((x2 - ox) / taille_case + 0.5)
+        gy2 = int((y2 - oy) / taille_case + 0.5)
+
+        murs.add((gx1, gy1, gx2, gy2))
+    
+    print("MURS récupérés (murs conservés): ", murs)
+    return murs
+
+
+def graphe_mur_selectionners(canvas, ox, oy, taille_case, L, H, depart, arrivee, bouton, fenetre=None):
+    """
+    Construit le graphe à partir des murs sélectionnés
+    Vérifie si un chemin existe entre le départ et l'arrivée
+    L: nombre de colonnes (longueur)
+    H: nombre de lignes (hauteur)
+    """
+    # Vérifier que départ et arrivée sont définis
+    if depart is None or arrivee is None:
+        print("Erreur: Départ ou Arrivée non définis")
+        return False
+    
+    murs = recuperer_murs(canvas, ox, oy, taille_case, L, H)
+    laby = Labyrinthe(murs=murs, long=L, larg=H)
+    graphe = laby.construit_graphe()
+
+    print(f"Nombre de sommets: {len(graphe.sommets())}")
+    print(f"Départ: {depart}, Arrivée: {arrivee}")
+    print(f"Sommets voisins du départ {depart}: {graphe.voisins(depart)}")
+    
+    # Vérifier s'il existe un chemin entre départ et arrivée
+    from scripts_graphe.parcours_graphe import existe_chemin_rec
+    
+    chemin_existe = existe_chemin_rec(graphe, depart, arrivee)
+    
+    if chemin_existe:
+        print(f"✓ Chemin valide trouvé entre {depart} et {arrivee}")
+        bouton.config(state="disabled", bg="light green")
+        
+        if auto_res_laby:
+            resoudre_labyrinthe(canvas, ox, oy, taille_case, L, H, depart, arrivee)
+        
+        return True
+    else:
+        print(f"✗ Aucun chemin trouvé entre {depart} et {arrivee}")
+        bouton.config(state="normal", bg="red", fg="white")
+        if fenetre is not None:
+            label_erreur = tk.Label(
+                fenetre,
+                text="Aucun chemin\nvalide!\nModifiez\nles murs.",
+                bg="red",
+                fg="white",
+                font=("", 20, "bold"),
+                justify="center"
+            )
+            label_erreur.place(anchor="center", rely=0.5, relx=0.92)
+            fenetre.after(3000, label_erreur.destroy)
+        return False
+
+# ================== RÉSOLUTION DU LABYRINTHE ==================
+
+def resoudre_labyrinthe(canvas, ox, oy, taille_case, L, H, depart, arrivee):
+    """
+    Trouve et dessine le plus court chemin entre départ et arrivée
+    Utilise parcours_graphe pour trouver le chemin
+    """
+    if depart is None or arrivee is None:
+        print("Erreur: Départ ou Arrivée non définis")
+        return
+    
+    # Récupérer tous les murs et construire le graphe
+    murs = recuperer_murs(canvas, ox, oy, taille_case, L, H)
+    laby = Labyrinthe(murs=murs, long=L, larg=H)
+    graphe = laby.construit_graphe()
+    
+    # Trouver le plus court chemin
+    from scripts_graphe.parcours_graphe import court_chemin
+    
+    chemin = court_chemin(graphe, depart, arrivee)
+    
+    if chemin is None:
+        print("Erreur: Aucun chemin trouvé")
+        return
+    
+    print(f"Chemin trouvé: {chemin}")
+    
+    # Dessiner le chemin en rouge
+    for i in range(len(chemin) - 1):
+        case_actuelle = chemin[i]
+        case_suivante = chemin[i + 1]
+        
+        # Calculer les coordonnées du centre des cases
+        x1 = ox + case_actuelle[0] * taille_case + taille_case // 2
+        y1 = oy + case_actuelle[1] * taille_case + taille_case // 2
+        x2 = ox + case_suivante[0] * taille_case + taille_case // 2
+        y2 = oy + case_suivante[1] * taille_case + taille_case // 2
+        
+        # Dessiner une ligne rouge
+        canvas.create_line(x1, y1, x2, y2, fill="red", width=3, tags="chemin")
 
 # ================== PARAMÈTRES ==================
 
@@ -331,15 +492,14 @@ def lancer_labyrinthe():
 
     label_manuel = tk.Label(
         frame_parent,
-        text="Si le placement du départ/arrivée est manuel,\nCliquez d'abord sur la grille pour les choisir!",
-        font=("", 30, "bold"),
+        text="Si le placement\ndu départ/arrivée est manuel,\nCliquez d'abord sur\nla grille pour les choisir!",
+        font=("", 20, "bold"),
         fg="red"
-        )
-
-    label_manuel.place(anchor="center", rely=0.2, relx=0.5)
+    )
+    label_manuel.place(anchor="center", rely=0.5, relx=0.13)
 
     bouton_dep_arr, activer_mode_manuel = grille_cliquable_sans_doublon(
-    canvas, root, L, H, taille_case, ox, oy)
+        canvas, root, L, H, taille_case, ox, oy)
     
     if auto_dep_arr:
         bouton_dep_arr.invoke()
