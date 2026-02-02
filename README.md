@@ -1,3 +1,5 @@
+Projet de NSI, fait rapidement, bêtement mais fonctionnel.
+
 # NSILabyrinthe
 
 ## Fonctionnalitées principales
